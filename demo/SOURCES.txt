@@ -1,0 +1,8 @@
+Demo media credits (random pick at build time):
+- Source portrait: Unsplash photo-1507003211169-0a1dd7228f2d (man portrait, w=512)
+  https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=512
+- Target video: Pexels video 3209828, UHD 3840x2160 25fps, trimmed to first
+  150 frames and downscaled to 960x540 for the demo clip (demo/target.mp4).
+  https://videos.pexels.com/video-files/3209828/3209828-uhd_3840_2160_25fps.mp4
+- Pre-rendered swap: demo/result.mp4 (150 frames, faces swapped in 145).
+Check the Unsplash/Pexels licenses before publishing or commercial use.

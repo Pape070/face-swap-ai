@@ -1,0 +1,6 @@
+flask>=3.0
+opencv-python-headless>=4.8
+numpy>=1.26
+# Optional high-quality mode (uncomment to enable InsightFace):
+# insightface>=0.7
+# onnxruntime>=1.17
