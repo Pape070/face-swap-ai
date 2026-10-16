@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>HeadSwap — Image to Video Face Swap</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { background: radial-gradient(1200px 600px at 20% -10%, #312e81 0%, transparent 60%), radial-gradient(1000px 500px at 90% 10%, #0e7490 0%, transparent 55%), #09090b; }
+  .card { background: rgba(24,24,27,.82); backdrop-filter: blur(12px); }
+  .drop { border: 1.5px dashed #52525b; transition: .2s; }
+  .drop:hover, .drop.dragover { border-color: #22d3ee; background: rgba(34,211,238,.06); }
+  input[type=range]{ accent-color:#22d3ee; }
+  video,img{ background:#000; }
+</style>
+</head>
+<body class="text-zinc-100 min-h-screen">
+<div class="max-w-6xl mx-auto px-4 py-10">
+  <header class="flex items-center gap-3 mb-2">
+    <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-cyan-400 to-violet-600 grid place-items-center text-2xl">🎭</div>
+    <div>
+      <h1 class="text-3xl font-extrabold tracking-tight">HeadSwap <span class="text-cyan-300">Studio</span></h1>
+      <p class="text-zinc-400 text-sm">Swap a full head — face + forehead + hair + jaw — from a photo onto every frame of a video.</p>
+    </div>
+  </header>
+
+  <div class="card rounded-2xl p-5 border border-cyan-900 mt-6 flex flex-wrap items-center gap-4">
+    <div class="flex-1 min-w-[220px]">
+      <h2 class="font-bold">🚀 Try the instant demo</h2>
+      <p class="text-sm text-zinc-400">Random portrait + 6s stock clip included. One click loads them and runs the swap — or watch the pre-rendered result below.</p>
+    </div>
+    <button id="demoBtn" class="px-5 py-3 rounded-xl font-bold bg-cyan-300 text-black hover:opacity-90">Load demo files & swap</button>
+    <a href="/static/demo/result.mp4" target="_blank" class="text-sm text-cyan-300 underline">Watch pre-rendered result</a>
+  </div>
+
+  <div class="grid md:grid-cols-2 gap-5 mt-6">
+    <div class="card rounded-2xl p-5 border border-zinc-800">
+      <h2 class="font-bold mb-1">1 · Source head <span class="text-xs font-normal text-zinc-400">(photo to take the head from)</span></h2>
+      <label id="srcDrop" class="drop rounded-xl p-6 grid place-items-center text-center cursor-pointer min-h-[220px]">
+        <input id="srcInput" type="file" accept="image/*" class="hidden"/>
+        <div id="srcEmpty">
+          <div class="text-4xl mb-2">🧑</div>
+          <p class="font-semibold">Drop a face photo here or click to browse</p>
+          <p class="text-xs text-zinc-400 mt-1">Front-facing, good light, JPG/PNG. Largest face is used.</p>
+        </div>
+        <img id="srcPrev" class="hidden max-h-56 rounded-lg object-contain" alt="source preview"/>
+      </label>
+    </div>
+    <div class="card rounded-2xl p-5 border border-zinc-800">
+      <h2 class="font-bold mb-1">2 · Target video <span class="text-xs font-normal text-zinc-400">(video to swap onto)</span></h2>
+      <label id="tgtDrop" class="drop rounded-xl p-6 grid place-items-center text-center cursor-pointer min-h-[220px]">
+        <input id="tgtInput" type="file" accept="video/*" class="hidden"/>
+        <div id="tgtEmpty">
+          <div class="text-4xl mb-2">🎬</div>
+          <p class="font-semibold">Drop a video here or click to browse</p>
+          <p class="text-xs text-zinc-400 mt-1">MP4/WebM/MOV. Keep it short (≤60s) for fast demo.</p>
+        </div>
+        <video id="tgtPrev" class="hidden max-h-56 rounded-lg w-full" controls muted playsinline></video>
+      </label>
+    </div>
+  </div>
+
+  <div class="card rounded-2xl p-5 border border-zinc-800 mt-5">
+    <h2 class="font-bold mb-3">3 · Full-head settings</h2>
+    <div class="grid md:grid-cols-3 gap-6">
+      <div>
+        <div class="flex justify-between text-sm mb-1"><span>Scalp / hair coverage</span><b id="scalpVal" class="text-cyan-300">0.85</b></div>
+        <input id="scalp" type="range" min="0.2" max="1.4" step="0.05" value="0.85" class="w-full"/>
+        <p class="text-xs text-zinc-500 mt-1">Higher = more forehead & hair included.</p>
+      </div>
+      <div>
+        <div class="flex justify-between text-sm mb-1"><span>Head width</span><b id="sideVal" class="text-cyan-300">0.30</b></div>
+        <input id="side" type="range" min="0" max="0.8" step="0.05" value="0.30" class="w-full"/>
+        <p class="text-xs text-zinc-500 mt-1">Expands sides to cover hair & ears.</p>
+      </div>
+      <div>
+        <div class="flex justify-between text-sm mb-1"><span>Blend strength</span><b id="blendVal" class="text-cyan-300">0.92</b></div>
+        <input id="blend" type="range" min="0.3" max="1" step="0.02" value="0.92" class="w-full"/>
+        <p class="text-xs text-zinc-500 mt-1">Lower = more of the original lighting kept.</p>
+      </div>
+    </div>
+    <div class="flex flex-wrap items-center gap-3 mt-5">
+      <button id="swapBtn" class="px-6 py-3 rounded-xl font-bold bg-gradient-to-r from-cyan-400 to-violet-500 text-black hover:opacity-90 disabled:opacity-40" disabled>✨ Swap head into video</button>
+      <button id="dlBtn" class="hidden px-5 py-3 rounded-xl font-bold bg-zinc-100 text-black">⬇ Download MP4</button>
+      <span id="status" class="text-sm text-zinc-400"></span>
+    </div>
+    <div id="progWrap" class="hidden mt-4">
+      <div class="h-3 rounded-full bg-zinc-800 overflow-hidden"><div id="prog" class="h-full w-0 bg-gradient-to-r from-cyan-400 to-violet-500 transition-all"></div></div>
+      <p id="progText" class="text-xs text-zinc-400 mt-1"></p>
+    </div>
+  </div>
+
+  <div id="resultWrap" class="hidden card rounded-2xl p-5 border border-zinc-800 mt-5">
+    <h2 class="font-bold mb-2">4 · Result</h2>
+    <video id="result" class="w-full max-h-[480px] rounded-xl" controls playsinline></video>
+    <p id="meta" class="text-xs text-zinc-400 mt-2"></p>
+  </div>
+
+  <details class="card rounded-2xl p-5 border border-zinc-800 mt-5 text-sm text-zinc-300">
+    <summary class="font-bold cursor-pointer">How it works & tips for a clean swap</summary>
+    <ul class="list-disc ml-5 mt-2 space-y-1 text-zinc-400">
+      <li>Backend detects the face in your photo, expands the box into a <b>full-head region</b> (scalp, hair, jaw), color-matches it to each video frame in LAB space, and blends with seamless cloning + feathered head mask.</li>
+      <li>Best source: front-facing, neutral expression, chin-to-hairline visible, no sunglasses.</li>
+      <li>Best target: one person, facing camera, stable light. Side profiles may fall back to the original frame.</li>
+      <li>If InsightFace + <code>inswapper_128.onnx</code> is installed, the app auto-upgrades to neural swapping.</li>
+      <li>Only swap faces you have consent to use. Don't create misleading videos of real people.</li>
+    </ul>
+  </details>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const srcInput=$('srcInput'), tgtInput=$('tgtInput');
+let poll=null, lastJob=null;
+
+function wireDrop(dropId, input){
+  const d=$(dropId);
+  d.addEventListener('click', e=>{ if(e.target.tagName!=='VIDEO') input.click(); });
+  ['dragover','dragenter'].forEach(ev=>d.addEventListener(ev,e=>{e.preventDefault();d.classList.add('dragover');}));
+  ['dragleave','drop'].forEach(ev=>d.addEventListener(ev,e=>{e.preventDefault();d.classList.remove('dragover');}));
+  d.addEventListener('drop',e=>{ if(e.dataTransfer.files[0]){ input.files=e.dataTransfer.files; input.dispatchEvent(new Event('change')); }});
+}
+wireDrop('srcDrop',srcInput); wireDrop('tgtDrop',tgtInput);
+
+srcInput.addEventListener('change',()=>{
+  const f=srcInput.files[0]; if(!f) return;
+  $('srcPrev').src=URL.createObjectURL(f); $('srcPrev').classList.remove('hidden'); $('srcEmpty').classList.add('hidden');
+  checkReady();
+});
+tgtInput.addEventListener('change',()=>{
+  const f=tgtInput.files[0]; if(!f) return;
+  $('tgtPrev').src=URL.createObjectURL(f); $('tgtPrev').classList.remove('hidden'); $('tgtEmpty').classList.add('hidden');
+  checkReady();
+});
+function checkReady(){ $('swapBtn').disabled = !(srcInput.files[0] && tgtInput.files[0]); }
+
+[['scalp','scalpVal'],['side','sideVal'],['blend','blendVal']].forEach(([a,b])=>{
+  $(a).addEventListener('input',()=>{ $(b).textContent=(+$(a).value).toFixed(2); });
+});
+
+$('demoBtn').addEventListener('click', async ()=>{
+  $('status').textContent='Loading demo files…';
+  try {
+  const dt1=new DataTransfer(), dt2=new DataTransfer();
+  const [sb, tb]=await Promise.all([
+    (await fetch('/static/demo/source.jpg')).blob(),
+    (await fetch('/static/demo/target.mp4')).blob()
+  ]);
+  dt1.items.add(new File([sb],'demo-source.jpg',{type:'image/jpeg'}));
+  srcInput.files=dt1.files; srcInput.dispatchEvent(new Event('change'));
+  dt2.items.add(new File([tb],'demo-target.mp4',{type:'video/mp4'}));
+  tgtInput.files=dt2.files; tgtInput.dispatchEvent(new Event('change'));
+  $('status').textContent='Demo loaded — starting swap…';
+  $('swapBtn').click();
+  } catch(e){
+    $('status').textContent='Demo files missing — run: python demo/get_demo_media.py';
+  }
+});
+$('swapBtn').addEventListener('click', async ()=>{
+  const fd=new FormData();
+  fd.append('source',srcInput.files[0]); fd.append('target',tgtInput.files[0]);
+  fd.append('scalp',$('scalp').value); fd.append('side',$('side').value); fd.append('blend',$('blend').value);
+  $('swapBtn').disabled=true; $('status').textContent='Uploading…';
+  $('progWrap').classList.remove('hidden'); $('resultWrap').classList.add('hidden'); $('dlBtn').classList.add('hidden');
+  const r=await fetch('/api/swap',{method:'POST',body:fd});
+  const j=await r.json();
+  if(j.error){ $('status').textContent='❌ '+j.error; $('swapBtn').disabled=false; return; }
+  lastJob=j.job_id; $('status').textContent='Processing…';
+  clearInterval(poll);
+  poll=setInterval(async ()=>{
+    const p=await (await fetch('/api/progress/'+lastJob)).json();
+    $('prog').style.width=p.percent+'%';
+    $('progText').textContent=`${p.percent}% · frame ${p.progress}/${p.total} · faces swapped in ${p.faces} frames · ${p.status}`;
+    if(p.status==='done'){
+      clearInterval(poll);
+      $('status').textContent='✅ Done';
+      $('result').src='/api/result/'+lastJob+'?t='+Date.now();
+      $('resultWrap').classList.remove('hidden');
+      $('meta').textContent=`Engine: ${p.engine} · swapped faces in ${p.faces}/${p.total} frames`;
+      const dl=$('dlBtn'); dl.classList.remove('hidden');
+      dl.onclick=()=>{ window.location='/api/download/'+lastJob; };
+      $('swapBtn').disabled=false;
+    } else if(p.status==='error'){
+      clearInterval(poll);
+      $('status').textContent='❌ '+p.error; $('swapBtn').disabled=false;
+    }
+  },800);
+});
+</script>
+</body>
+</html>
