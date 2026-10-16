@@ -1,0 +1,26 @@
+#!/bin/sh
+# Minimal Gradle Wrapper: downloads + runs the Gradle version pinned in
+# gradle/wrapper/gradle-wrapper.properties. No binary jar is committed.
+# (Pinning avoids CI picking an incompatible "latest" Gradle — AGP 8.5.x
+#  targets Gradle 8.x; CI previously used 9.x.)
+set -e
+APP_HOME="$(cd "$(dirname "$0")" && pwd)"
+DIST_URL="$(grep '^distributionUrl=' "$APP_HOME/gradle/wrapper/gradle-wrapper.properties" \
+  | cut -d= -f2- | sed 's/\\:/:/g')"
+DIST_DIR="$HOME/.gradle-wrapper/dists"
+ZIP="$DIST_DIR/$(basename "$DIST_URL")"
+if [ ! -f "$ZIP" ]; then
+  mkdir -p "$DIST_DIR"
+  echo "Downloading $DIST_URL ..."
+  curl -sL --retry 3 -o "$ZIP" "$DIST_URL"
+fi
+INSTALL="$DIST_DIR/unpacked"
+MARK="$INSTALL/.ok-$(basename "$ZIP" .zip)"
+if [ ! -f "$MARK" ]; then
+  rm -rf "$INSTALL"
+  mkdir -p "$INSTALL"
+  unzip -q "$ZIP" -d "$INSTALL"
+  touch "$MARK"
+fi
+GRADLE_BIN="$(ls -d "$INSTALL"/gradle-*/bin/gradle | head -n 1)"
+exec "$GRADLE_BIN" "$@"

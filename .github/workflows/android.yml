@@ -20,8 +20,8 @@ jobs:
           distribution: temurin
           java-version: "17"
       - uses: gradle/actions/setup-gradle@v3
-      - run: chmod +x gradlew || true
-      - run: gradle :app:assembleDebug
+      - run: chmod +x gradlew
+      - run: ./gradlew :app:assembleDebug
       - uses: actions/upload-artifact@v4
         with:
           name: HeadSwapStudio-debug-apk

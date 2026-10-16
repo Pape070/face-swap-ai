@@ -17,7 +17,9 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            // NOTE: Groovy DSL — the Kotlin-DSL spelling `isMinifyEnabled = false`
+            // fails here with "Could not set unknown property 'isMinifyEnabled'".
+            minifyEnabled false
         }
     }
     compileOptions {
