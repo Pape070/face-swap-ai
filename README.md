@@ -6,7 +6,7 @@ frame of a video. Three editions, one engine (`face_swap.py`):
 | Edition | Folder | Run |
 |---|---|---|
 | 🌐 Web app | repo root (`app.py` + `static/`) | `pip install -r requirements.txt && python app.py` → http://localhost:3000 |
-| 🖥 Desktop | `desktop/` | `python desktop/faceswap_desktop.py` (Tkinter, no browser) |
+| 🖥 Desktop | `desktop/` | standalone `HeadSwapStudio` executable (CI artifacts) or `python desktop/faceswap_desktop.py` |
 | 📱 Android | `android/` | Point the app at your server, build APK via CI |
 
 ## How it works
@@ -31,14 +31,7 @@ app.py  face_swap.py  static/  demo/   # web edition + demo media
 desktop/                               # Tkinter desktop edition
 android/                               # Kotlin WebView Android edition
 .github/workflows/android.yml          # CI: builds debug APK
-```
-
-## Demo media
-
-Generated files (`demo/*.mp4`, `static/demo/*`) are git-ignored. Recreate them:
-
-```bash
-python demo/get_demo_media.py
+.github/workflows/desktop.yml          # CI: builds desktop executables (Linux/Windows/macOS)
 ```
 
 ## Test report (latest)

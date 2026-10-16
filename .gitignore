@@ -10,3 +10,7 @@ demo/*.mp4
 demo/_clip_full.mp4
 static/demo/*.jpg
 static/demo/*.mp4
+# PyInstaller build outputs (executables ship via CI artifacts)
+dist/
+build/
+*.spec.user

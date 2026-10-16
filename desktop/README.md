@@ -12,13 +12,27 @@ python faceswap_desktop.py
 
 First run downloads the YuNet face model (~300 KB) into `../models/`.
 
-## Build a standalone executable
+## Headless mode (no display needed)
 
 ```bash
-pip install pyinstaller
-pyinstaller --onefile --windowed --name HeadSwapStudio \
-  --add-data "../models:models" faceswap_desktop.py
-# dist/HeadSwapStudio  (add the models/ folder next to it if excluded)
+python faceswap_desktop.py --version
+python faceswap_desktop.py --cli photo.jpg video.mp4 out.mp4
 ```
+
+## Standalone executable
+
+Prebuilt binaries for Linux, Windows and macOS are attached to every
+`desktop-exe` CI run (Actions → Artifacts: `HeadSwapStudio-<os>`).
+
+Build locally:
+
+```bash
+pip install -r ../requirements.txt pyinstaller
+pyinstaller --noconfirm desktop/HeadSwapStudio.spec
+# → dist/HeadSwapStudio  (single file, YuNet model bundled inside)
+```
+
+The frozen app finds its model in this order: bundled `models/` → folder
+next to the executable → `~/.headswap_studio/models/` (auto-download).
 
 Only swap faces you have consent to use.
