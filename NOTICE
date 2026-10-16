@@ -1,0 +1,11 @@
+Third-party model licenses
+---------------------------
+Pretrained face models downloaded at runtime carry their own licenses,
+separate from this repo's MIT license:
+
+- YuNet face detection (auto-downloaded from opencv_zoo on first run) —
+  see https://github.com/opencv/opencv_zoo for its license terms.
+- InsightFace inswapper models (optional, user-supplied) — the InsightFace
+  project notes its code is MIT but pretrained models are for non-commercial
+  research; contact InsightFace about licensing before commercial use.
+- Demo media credits and terms: see demo/SOURCES.txt.
